@@ -114,6 +114,22 @@ curl -u admin:admin12345 -X PUT \
      http://127.0.0.1:8099/apis/api.console.halo.run/v1alpha1/themes/<主题名>/activation
 ```
 
+## 跟上游同步
+
+这个仓库是 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d) 的 fork，
+`dsh-live2d-pet/lib/` 与宠物包都来自上游 —— 上游更新时合并进来即可：
+
+```bash
+git fetch upstream
+git merge upstream/main          # 冲突多半在 tools/ 与 dsh-live2d-pet/，Halo 侧一般不动
+node tools/build-halo-plugin.mjs # 合并后必须重新生成，否则插件里还是旧客户端
+node tools/build-halo-plugin.mjs --check
+cd tools/browser-test && node run-suite.mjs halo halo-tree --jobs 1
+```
+
+`halo-plugin/src/main/resources/pet/` 是生成物，合并冲突时**不要手改**：取上游源文件，
+重跑生成器覆盖它。
+
 ## 改代码时的两条纪律
 
 1. **`src/main/resources/pet/` 里除 4 个手写文件外都是生成的**（`pet-shim.js`、`pet-halo.js`、
