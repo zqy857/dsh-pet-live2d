@@ -21,8 +21,8 @@ spec:
   settingName: whale-pet-live2d-settings
   configMapName: whale-pet-live2d-configmap
   displayName: "鲸鱼娘桌宠（Live2D）"
-  # 插件图标：由 ReverseProxy 的 /logo/** 固定路径发出（不随版本变更）。
-  logo: "/plugins/whale-pet-live2d/assets/logo/logo.png"
+  # 插件图标：相对 src/main/resources 的路径（Halo 文档：可填 URL 或相对 resources 的路径）
+  logo: "logo.png"
   repo: "https://github.com/zqy857/whale-pet-live2d"
   homepage: "https://github.com/zqy857/whale-pet-live2d"
   issues: "https://github.com/zqy857/whale-pet-live2d/issues"

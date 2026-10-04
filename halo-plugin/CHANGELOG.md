@@ -4,6 +4,19 @@
 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)（MIT），
 Halo 插件部分由 zqy857 维护；美术资源是 CC BY-NC-SA 4.0。
 
+## 0.2.2
+
+### 修：控制台里看不到插件图标（显示成名字首字「鲸」）
+
+`plugin.yaml` 的 `spec.logo` 之前写成 `/plugins/whale-pet-live2d/assets/logo/logo.png`。
+Halo 文档规定这个字段是 **URL** 或**相对 `src/main/resources` 的文件路径**，上面那种
+裸路径两者都不是 —— Halo 当相对路径去找，找不到就回退成显示插件名首字（所以是一个「鲸」字）。
+
+现在改成 `logo: logo.png` 并把图标放在 `src/main/resources/logo.png`（与社区插件的写法一致）。
+控制台实际请求的是 `/plugins/whale-pet-live2d/assets/logo.png?version=<版本>`，
+`tools/halo-smoke.mjs` 新增一条断言：**真的打开控制台插件页，确认我们那张图标
+`naturalWidth > 0`**（只验"图标 URL 返回 200"会漏掉这个问题 —— 之前就是这么漏的）。
+
 ## 0.2.1
 
 ### 改：插件图标换成头部特写

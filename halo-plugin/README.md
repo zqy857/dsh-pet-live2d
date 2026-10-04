@@ -13,9 +13,9 @@
 | `src/main/java/run/halo/whalepetlive2d/` | 两个类：`WhalePetLive2dPlugin`（`BasePlugin`）与 `WhalePetLive2dHeadProcessor`（注入 `<head>`） |
 | `src/main/resources/plugin.yaml` | 插件清单。`metadata.name` = `whale-pet-live2d`；`settingName` 必须与 Setting 的 `metadata.name` 一字不差，否则插件启动失败 |
 | `src/main/resources/extensions/settings.yaml` | 控制台里的设置页（分组 `basic`） |
-| `src/main/resources/extensions/reverse-proxy.yaml` | **生成**：把 jar 内的 `pet/` 与 `logo/` 挂成 `/plugins/whale-pet-live2d/assets/v<版本>/**` 与 `/assets/logo/**` |
+| `src/main/resources/extensions/reverse-proxy.yaml` | **生成**：把 jar 内的 `pet/` 挂成 `/plugins/whale-pet-live2d/assets/v<版本>/**` |
 | `src/main/resources/pet-base.properties` | **生成**：Java 侧读的静态资源前缀（与上面两处、与 catalog 三处互证） |
-| `logo.png` | **手写**：插件图标源文件（512×512，透明背景头部特写）；生成器复制到 `src/main/resources/logo/logo.png` |
+| `logo.png` | **手写**：插件图标源文件（512×512，透明背景头部特写）；生成器复制到 `src/main/resources/logo.png`（`spec.logo` 是相对 `src/main/resources` 的路径） |
 | `src/main/resources/pet/` | **生成**（4 个手写文件除外）：详见 [`src/main/resources/pet/README.md`](src/main/resources/pet/README.md) |
 | `gradle.properties` | 版本号唯一来源（`plugin.yaml` 的 `spec.version` 由 devtools 按它写入） |
 

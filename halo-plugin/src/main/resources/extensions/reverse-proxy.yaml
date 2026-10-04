@@ -6,10 +6,6 @@ kind: ReverseProxy
 metadata:
   name: whale-pet-live2d-assets
 rules:
-  - path: /v0.2.1/**
+  - path: /v0.2.2/**
     file:
       directory: pet
-  # 插件图标：固定路径（不带版本），plugin.yaml 的 spec.logo 指向这里。
-  - path: /logo/**
-    file:
-      directory: logo

@@ -173,12 +173,17 @@ check('plugin.yaml 的 metadata.name 是 ' + PLUGIN_NAME,
 // 审核明确要求：logo 不能用模板默认图标，homepage / issues 必须设置，requires 必须是
 // 合法 SemVer range 且没有首尾空白，制品里不许有无关大文件或本地配置。
 {
+  // Halo 文档：`spec.logo` 支持「URL 或相对 src/main/resources 的路径」。
+  // 之前写成 `/plugins/<名字>/assets/logo/logo.png` —— 两者都不是，Halo 当相对路径找不到，
+  // 控制台就回退成显示插件名首字（用户看到的是一个「鲸」字）。这里钉死"相对路径 + 文件在"。
   const logo = (/^\s*logo:\s*"?([^"\s]+)"?\s*$/m.exec(pluginYaml)?.[1] ?? '')
-  const prefix = '/plugins/' + PLUGIN_NAME + '/assets/logo/'
-  const logoRel = logo.startsWith(prefix) ? 'logo/' + logo.slice(prefix.length) : null
-  check('plugin.yaml 设置了自定义 logo 且文件在制品里',
-    logoRel !== null && existsSync(join(HALO, 'src', 'main', 'resources', logoRel)),
+  const isUrl = /^https?:\/\//.test(logo)
+  check('plugin.yaml 的 logo 是 URL 或相对 resources 的路径（不能是裸的 /plugins/... 路径）',
+    logo !== '' && (isUrl || !logo.startsWith('/')),
     logo === '' ? '缺 logo 字段' : logo)
+  check('logo 指向的文件在 resources 里',
+    logo !== '' && !isUrl && existsSync(join(HALO, 'src', 'main', 'resources', logo)),
+    logo)
   check('plugin.yaml 设置了 homepage', /^\s*homepage:\s*"?https?:\/\//m.test(pluginYaml), '')
   check('plugin.yaml 设置了 issues', /^\s*issues:\s*"?https?:\/\//m.test(pluginYaml), '')
   check('plugin.yaml 设置了 repo', /^\s*repo:\s*"?https?:\/\//m.test(pluginYaml), '')
@@ -194,8 +199,8 @@ check('plugin.yaml 的 metadata.name 是 ' + PLUGIN_NAME,
   const proxyYaml = existsSync(join(HALO, 'src', 'main', 'resources', 'extensions', 'reverse-proxy.yaml'))
     ? readFileSync(join(HALO, 'src', 'main', 'resources', 'extensions', 'reverse-proxy.yaml'), 'utf8')
     : ''
-  check('ReverseProxy 里有固定的 /logo/** 规则（图标不随版本变成死链）',
-    /path:\s*\/logo\/\*\*/.test(proxyYaml) && /directory:\s*logo\s*$/m.test(proxyYaml), '')
+  check('ReverseProxy 只映射版本化资源目录（图标走 Halo 自己的 resources 读取）',
+    /directory:\s*pet\s*$/m.test(proxyYaml) && !/\/logo\//.test(proxyYaml), '')
 }
 
 const settingName = /settingName:\s*([\w-]+)/.exec(pluginYaml)?.[1]

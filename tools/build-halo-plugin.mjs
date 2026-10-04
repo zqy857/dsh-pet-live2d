@@ -258,10 +258,6 @@ function writeSidecar(target) {
     '  - path: ' + ASSET_RULE,
     '    file:',
     '      directory: pet',
-    '  # 插件图标：固定路径（不带版本），plugin.yaml 的 spec.logo 指向这里。',
-    '  - path: /logo/**',
-    '    file:',
-    '      directory: logo',
     '',
   ].join('\n'))
   writeFileSync(join(target, 'pet-base.properties'), [
@@ -272,9 +268,10 @@ function writeSidecar(target) {
   ].join('\n'))
   // 插件图标：源文件是 `halo-plugin/logo.png`（512×512，透明背景的头部特写，
   // 由桌面端应用图标 `dsh-live2d-pet-desktop/src-tauri/icons/icon.png` 裁成正方形 + 留边距）。
+  // 目的地在 **resources 根**：Halo 的 `spec.logo` 支持"URL 或相对 src/main/resources 的路径"，
+  // 于是 plugin.yaml 里写 `logo: logo.png`（与社区插件 plugin-live2d 的写法一致）。
   // 这里只做复制，不做图像处理 —— 生成器不依赖 ImageMagick，换图标请替换源文件。
-  mkdirSync(join(target, 'logo'), { recursive: true })
-  cpSync(join(ROOT, 'halo-plugin', 'logo.png'), join(target, 'logo', 'logo.png'))
+  cpSync(join(ROOT, 'halo-plugin', 'logo.png'), join(target, 'logo.png'))
 }
 
 // ------------------------------------------------------------------- 同步校验
@@ -322,12 +319,12 @@ verify(DEST, catalog, pets)
   const pluginYaml = readFileSync(join(RESOURCES, 'plugin.yaml'), 'utf8')
   // YAML 里可能带引号（`logo: "/plugins/…"`），取值时把引号去掉
   const logoValue = (/^\s*logo:\s*"?([^"\s]+)"?\s*$/m.exec(pluginYaml)?.[1] ?? '')
-  if (!logoValue.startsWith('/plugins/' + PLUGIN_NAME + '/assets/logo/')) {
+  if (logoValue !== 'logo.png') {
     bad('plugin.yaml 的 logo 不是本插件图标地址：' + logoValue)
-  } else if (!existsSync(join(RESOURCES, 'logo', 'logo.png'))) {
-    bad('图标文件缺失：logo/logo.png')
+  } else if (!existsSync(join(RESOURCES, 'logo.png'))) {
+    bad('图标文件缺失：src/main/resources/logo.png')
   } else {
-    ok('插件图标就位：' + logoValue + ' → logo/logo.png')
+    ok('插件图标就位：' + logoValue + '（resources 根，Halo 按相对路径取）')
   }
 }
 
@@ -339,7 +336,7 @@ if (check) {
   writeSidecar(tempForCheck)
   compareTrees(DEST, join(tempForCheck, 'pet'))
   // 两个随产物生成的配置文件也逐个字节比（其余文件不是生成物，不参与）。
-  for (const rel of ['extensions/reverse-proxy.yaml', 'pet-base.properties', 'logo/logo.png']) {
+  for (const rel of ['extensions/reverse-proxy.yaml', 'pet-base.properties', 'logo.png']) {
     const real = join(RESOURCES, rel)
     const fresh = join(tempForCheck, rel)
     if (!existsSync(real)) bad('缺少生成文件 ' + rel)

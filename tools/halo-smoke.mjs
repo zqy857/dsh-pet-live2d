@@ -133,11 +133,16 @@ const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 // 审核要求 plugin.yaml 的 logo 正确设置 —— 顺手在真站点上验它真的取得到。
 // （固定路径，不带版本号：升级不会把图标变成死链。）
 const pluginYaml = readFileSync(join(REPO_ROOT, 'halo-plugin', 'src', 'main', 'resources', 'plugin.yaml'), 'utf8')
-const logoPath = (/^\s*logo:\s*"?([^"\s]+)"?\s*$/m.exec(pluginYaml)?.[1] ?? '')
-check('插件图标可取（plugin.yaml 的 logo 指向真实文件）', await (async () => {
-  if (!logoPath.startsWith('/')) { console.log('  logo 不是绝对路径：' + logoPath); return false }
-  const res = await fetch(BASE + logoPath)
-  if (!res.ok) { console.log('  ' + res.status + ' ' + logoPath); return false }
+const logoValue = (/^\s*logo:\s*"?([^"\s]+)"?\s*$/m.exec(pluginYaml)?.[1] ?? '')
+// logo 是相对 src/main/resources 的路径时，控制台要的是插件资源路由下的同一个资源。
+const logoUrl = logoValue.startsWith('http') ? logoValue
+  : logoValue.startsWith('/') ? logoValue
+    : `/plugins/${PLUGIN}/assets/${logoValue}`
+check('插件图标可取（plugin.yaml 的 logo 能通过插件资源路由取到）', await (async () => {
+  const res = await fetch(BASE + logoUrl)
+  if (!res.ok) { console.log('  ' + res.status + ' ' + logoUrl); return false }
+  const type = res.headers.get('content-type') ?? ''
+  if (!type.includes('image')) { console.log('  content-type=' + type); return false }
   return true
 })())
 
@@ -158,6 +163,8 @@ const browser = spawn(BROWSER, ['--headless=new', '--remote-debugging-port=' + C
   '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--no-first-run', '--no-default-browser-check',
   '--disable-extensions', '--user-data-dir=' + profile, '--window-size=1280,900', 'about:blank'],
 { stdio: 'ignore' })
+
+const basicAuthHeader = 'Basic ' + Buffer.from(USER + ':' + PASS).toString('base64')
 
 let ws = null
 try {
@@ -189,6 +196,14 @@ try {
     }
     if (message.method === 'Runtime.exceptionThrown') {
       pageLogs.push('EXCEPTION: ' + (message.params.exceptionDetails?.exception?.description ?? message.params.exceptionDetails?.text))
+    }
+    // 控制台要登录：给同源请求补一个 Authorization 头（本机 Halo 开着 basic auth）。
+    if (message.method === 'Fetch.requestPaused') {
+      const headers = Object.entries(message.params.request.headers ?? {})
+        .filter(([name]) => name.toLowerCase() !== 'authorization')
+        .map(([name, value]) => ({ name, value }))
+      headers.push({ name: 'Authorization', value: basicAuthHeader })
+      void send('Fetch.continueRequest', { requestId: message.params.requestId, headers })
     }
   }
   const send = (method, params = {}) => new Promise((resolve) => {
@@ -338,6 +353,37 @@ try {
   const doneMotion = await until(async () => await evaluate(
     '(() => { const el = document.querySelector("[data-dsh-live2d-pet]"); return el && el.getAttribute("data-motion") === "BubbleGum" })()'), 8000, 'motion=BubbleGum')
   check('真站点上 phaseNow("done") 换到了宠物声明的动作', donePhase === true && doneMotion === true)
+
+  // —— 控制台里的插件图标 ——
+  // 这条是补漏：`spec.logo` 写错时插件照样能装能跑，**只有控制台看得见**（Halo 找不到图标就
+  // 回退成显示插件名首字，用户看到的是一个「鲸」字）。所以必须用真的控制台页面来验，
+  // 光验"图标 URL 返回 200"不够 —— 前者曾经就是这么漏过去的。
+  // 控制台要登录：本机 Halo 开着 basic auth，所以用 CDP 的 Fetch 域给同源请求加 Authorization 头。
+  await send('Fetch.enable', { patterns: [{ urlPattern: BASE + '/*', requestStage: 'Request' }] })
+  // 注意：Halo 控制台是 **history 路由**（`/console/plugins`），
+  // 用 `location.hash = '#/plugins'` 会停在仪表盘 —— 曾经因此拿到过假阳性。
+  await send('Page.navigate', { url: BASE + '/console/plugins' })
+  await until(async () => await evaluate('document.querySelectorAll("img").length > 0'),
+    30000, '控制台插件列表')
+  const consoleProbe = `(() => {
+    const imgs = [...document.querySelectorAll('img')].map((i) => ({ src: i.currentSrc || i.src, w: i.naturalWidth }))
+    return JSON.stringify({ imgs, url: location.href, text: document.body.innerText.replace(/\\s+/g, ' ').slice(0, 160) })
+  })()`
+  // **必须是我们插件的图标**：src 里带 /plugins/<插件名>/assets/ 且 naturalWidth > 0。
+  // （只匹配 /logo/i 会撞上控制台自己的 logo —— 这么写曾经假阳性过一次。）
+  const ourIconRaw = await until(async () => {
+    const raw = await evaluate(consoleProbe)
+    if (raw === undefined || raw === null) return undefined
+    const state = JSON.parse(raw)
+    return (state.imgs ?? []).some((i) => i.src.includes(`/plugins/${PLUGIN}/assets/`) && i.w > 0) ? raw : undefined
+  }, 45000, '控制台里我们插件的图标')
+  const consoleState = ourIconRaw === undefined ? null : JSON.parse(ourIconRaw)
+  const ourIcon = (consoleState?.imgs ?? []).filter((i) => i.src.includes(`/plugins/${PLUGIN}/assets/`))
+  check('控制台里插件图标真的加载出来（不是名字首字兜底）', ourIcon.length > 0 && ourIcon.every((i) => i.w > 0),
+    ourIconRaw === undefined
+      ? '控制台没加载我们的图标；页面文本=' + JSON.stringify(await evaluate('document.body.innerText.replace(/\\s+/g, " ").slice(0, 160)'))
+      : JSON.stringify(ourIcon))
+  await send('Fetch.disable')
 
   console.log('\n页面异常（前 5 条）：' + JSON.stringify(pageLogs.slice(0, 5)))
 } finally {
