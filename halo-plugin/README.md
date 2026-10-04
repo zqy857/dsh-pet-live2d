@@ -1,137 +1,70 @@
-# Halo 插件：鲸鱼娘桌宠（Live2D / 插件 id `whale-pet-live2d`）
+# halo-plugin —— Halo 2.x 插件的工程说明
 
-> 本插件是 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)（DSH 桌宠，
-> MIT）的 **Halo 2.x 移植**，由 [zqy857](https://github.com/zqy857) 维护；
-> 插件 id 从上游的 `dsh-pet-live2d` 改为 `whale-pet-live2d`（Halo 里没有 DeepSeek Harness），
-> 资源 URL 相应变为 `/plugins/whale-pet-live2d/assets/...`。
-> 版本历史见 [`CHANGELOG.md`](CHANGELOG.md)。
+这个目录是插件本体（Java 代码 + 扩展点声明 + 生成好的静态资源 + Gradle 工程）。
 
-把上游 DSH 桌宠插件（`dsh-live2d-pet/`）的桌宠挂到 **Halo 2.x** 站点上：可拖动、跟随鼠标、
-右键面板换装，评论 / 搜索等页面事件会让她换动作与表情。
+- 用户要用的（安装、设置、许可、排障入口）：看[根 README](../README.md)；
+- 版本变化：看 [`CHANGELOG.md`](CHANGELOG.md)；
+- Halo 扩展点的硬事实与踩过的坑：看 [`.dsh/skills/halo-plugin/SKILL.md`](../.dsh/skills/halo-plugin/SKILL.md)。
 
-- 要求 **Halo ≥ 2.21**（2.21 起 Halo 要求 Java 21）。
-- 插件自带宠物（DS鲸鱼娘，4.3 MB）与渲染栈，装完即可用；**不包含** Live2D Cubism Core
-  （专有运行时，默认从官方 CDN 取，站长可在设置里改成自建地址）。
+## 目录里有什么
 
-> 许可：代码 MIT，模型与贴图 **CC BY-NC-SA 4.0（署名 · 非商业 · 相同方式共享）**。
-> 站点若有广告 / 付费内容 / 带货，属于商业用途，需要**分别**取得三位版权人的授权。
-> 详见 [`src/main/resources/pet/LICENSES.md`](src/main/resources/pet/LICENSES.md)。
-
-## 披露（审核与用户都该看到的）
-
-**外部请求**：默认从 Live2D 官方 CDN 取一次专有运行时
-`https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js`（约 200 KB）。
-Live2D Cubism Core 是 Live2D Inc. 的专有软件，**本插件不打包、不转发**它；站长可以在
-插件设置里把 `Cubism Core 地址` 换成自建地址（离线部署也走这一条）。除此之外，插件
-**不向任何第三方发出请求**。
-
-**数据**：不收集、不上传任何访客数据，也没有遥测。桌宠的位置、大小、装扮、台词覆盖只存在
-**访客浏览器的 localStorage**（键名前缀 `dsh-pet-live2d`，沿用上游客户端的键名）。停用插件后前台不再注入任何
-标签；访客浏览器里已存的那几个键会留着，需要的话让访客清一下站点数据即可。
-
-**署名**（美术资源 CC BY-NC-SA 4.0）：
-
-| 版权所有人 | 贡献 |
+| 路径 | 说明 |
 |---|---|
-| [上善无形](https://www.pixiv.net/users/62155430) | 鲸鱼娘角色形象原作（原创 OC「溟月」） |
-| [ZipZipPipe](https://www.pixiv.net/users/18604994) | 加入 DeepSeek 元素的女仆鲸鱼娘二次设计 |
-| [氵六青](https://space.bilibili.com/11272072) | 本模型（DS鲸鱼娘）的 Live2D 绑定、动作、表情 |
+| `src/main/java/run/halo/whalepetlive2d/` | 两个类：`WhalePetLive2dPlugin`（`BasePlugin`）与 `WhalePetLive2dHeadProcessor`（注入 `<head>`） |
+| `src/main/resources/plugin.yaml` | 插件清单。`metadata.name` = `whale-pet-live2d`；`settingName` 必须与 Setting 的 `metadata.name` 一字不差，否则插件启动失败 |
+| `src/main/resources/extensions/settings.yaml` | 控制台里的设置页（分组 `basic`） |
+| `src/main/resources/extensions/reverse-proxy.yaml` | **生成**：把 jar 内的 `pet/` 与 `logo/` 挂成 `/plugins/whale-pet-live2d/assets/v<版本>/**` 与 `/assets/logo/**` |
+| `src/main/resources/pet-base.properties` | **生成**：Java 侧读的静态资源前缀（与上面两处、与 catalog 三处互证） |
+| `src/main/resources/logo/logo.png` | **生成**：插件图标（从 `dsh-live2d-pet/docs/preview.png` 复制） |
+| `src/main/resources/pet/` | **生成**（4 个手写文件除外）：详见 [`src/main/resources/pet/README.md`](src/main/resources/pet/README.md) |
+| `gradle.properties` | 版本号唯一来源（`plugin.yaml` 的 `spec.version` 由 devtools 按它写入） |
 
-**体积**：前端资源约 5.1 MB（模型 4.3 MB + 渲染引擎 0.8 MB + 客户端与 React 0.5 MB），
-首次访问时加载。生产站点建议在反向代理/CDN 上给
-`/plugins/whale-pet-live2d/assets/**` 配长缓存。
+## 注入规格
 
-**来源与借鉴**：本插件是同一作者的
-[DSH 桌宠插件](https://github.com/zqy857/whale-pet-live2d)（`dsh-live2d-pet/`）的移植 ——
-渲染用 pixi.js + untitled-pixi-live2d-engine，交互与「槽位 / 池子」领域模型都是本项目自己的代码。
-其中**一个技术点**借鉴了社区插件 [LIlGG/plugin-live2d](https://github.com/LIlGG/plugin-live2d)：
-把配置放进 `<script type="application/json">` 的标签体而不是 HTML 属性（我们在此基础上保留了
-"外部加载脚本、无内联可执行脚本"的做法，见 `SKILL.md`）。
-两者的定位不同：那个插件是"看板娘 + AI 聊天/Agent + TIPS 小游戏"；本插件是"可拖动、跟随鼠标、
-有 44 个表情与 20 个装扮槽的桌宠"，并且**不打包 Cubism Core**、**资源路径带版本号**（升级即时生效）、
-**软导航后能自愈**。
+`TemplateHeadProcessor` 往 `<head>` 末尾追加**一个文本事件**，内容是两段标签：
 
-**已验证的 Halo 版本**：2.21.0 与 2.26.0（当前最新）上，安装 / 启用 / 前台渲染 / 配置 /
-软导航自愈 / 禁用，均通过 `tools/halo-smoke.mjs` 的 23 项检查。
-
-## 安装
-
-1. 从 Release / 应用市场拿到 `whale-pet-live2d-<版本>.jar`；
-2. Halo 控制台 → **插件** → 右上角「安装」→ 上传这个 jar；
-3. 装好后启用插件；
-4. 打开站点前台，右下角就会出现她。
-
-## 设置（控制台 → 插件 → DSH 桌宠 Live2D → 设置）
-
-| 设置项 | 默认 | 作用 |
-|---|---|---|
-| 启用桌宠 | 开 | 关掉后前台**一个标签都不注入** |
-| Cubism Core 地址 | 空 | 留空 = 用 Live2D 官方 CDN；有自建镜像 / 离线部署时填自己的地址 |
-| 启用「博客事件 → 相位」 | 开 | 聚焦评论框 = `asking`、提交评论 = `done`、站内搜索 = `thinking` |
-| 评论 / 搜索区域选择器 | 空 | 留空用内置的一组常见选择器；主题不一样时可以自己写（英文逗号分隔） |
-| 默认覆盖表（JSON） | 空 | 给相位池子 / 摸鱼池 / 关系 / 互动 / 台词灌**默认值**（访客自己改过的优先）。顶层键：`phases`、`fidget`、`relations`、`interactions`、`lines`。例：`{"lines": {"phase": {"asking": "等你说点什么～"}}}` |
-
-主题或别的脚本也可以直接驱动她：
-
-```js
-window.__haloPetPhase("done");          // 演一次庆祝
-window.__haloPetPhase("asking", 5000);  // 进 asking，5 秒后回 idle
+```html
+<script type="application/json" id="whale-pet-live2d-config">{"base":"/plugins/whale-pet-live2d/assets/v0.2.0","coreUrl":"","phases":true}</script>
+<script defer src="/plugins/whale-pet-live2d/assets/v0.2.0/pet-shim.js"></script>
 ```
 
-可用的相位：`idle` / `thinking` / `tool` / `waiting` / `asking` / `helper` / `queued` /
-`done` / `failed`（具体演什么由宠物自己的 `pet.json` 与相位池子决定）。
+两段都是手写的完整闭合标签，配置放在**标签体**里：
 
-## 它是怎么接上去的（排障用）
+- **不用自闭合的 `<script … />`**：HTML 里 script 不是自闭合元素，解析器会把它当开标签，
+  一路吞掉后面的 `</head>`、`<body class="…">` 与主题自己的配置元素，直到遇见下一个
+  `</script>`。真站（Ethereal 主题）上首屏 banner 就是这么坏的；
+- **配置不塞 HTML 属性**：Thymeleaf 不替属性值转义，塞属性里就得自己把 `"` 换成 `&quot;`，
+  漏一个属性就在第一个内层引号处断掉（服务端 200、日志无声）。放进标签体后只剩一条规则：
+  把 JSON 里的 `<` 换成 `\u003c`。
 
-```
-TemplateHeadProcessor  →  <head> 里一个 <script defer src="…/pet-shim.js" data-config='{…}'>
-ReverseProxy           →  /plugins/whale-pet-live2d/assets/pet/**   （catalog、React、client.js、模型）
-```
+写进 model 的文本是原样输出的 —— Thymeleaf 的 `[[…]]` 内联只发生在**解析期**，不会回头
+处理处理器追加的文本。配置块里的字段含义见
+[`pet/README.md`](src/main/resources/pet/README.md#配置块的字段)。
 
-- Halo 侧**没有** `/api/live2d-pet/*` 路由：catalog 与资产都是静态文件，相位来自页面事件。
-- 页面里没有内联脚本（配置挂在 `data-config` 属性上），避免撞 Halo 的 CSP。
-- 排障读口：
+## 排障
 
-```js
-window.__dshLive2dPetBoot   // { ok, stage, error, config, files, ms }
-window.__dshLive2dPetHalo   // { ready, applied, phase, phaseEvents, lastEvent, errors }
-```
+两条真站上出过的问题，现象与自检方式如下。
 
-### 排障：顶部 banner 坏掉 / 主题样式失效（0.1.2 修）
+### 顶部 banner 坏掉、主题像没生效
 
-**症状**：首页顶部的 banner 加载不出来、主题的 body 类名/自定义属性像是没生效，
-而桌宠本身正常。
+**现象**：首页 banner 加载不出来，主题的 body 类名 / 自定义属性像是没应用，而桌宠自己正常。
 
-**根因**：插件注入的 `<script>` 曾经被序列化成**自闭合**的 `<script … />`。HTML 里 script
-不是自闭合元素 —— 解析器把它当开标签，然后把**后面的一切**当成脚本文本吞掉，直到下一个
-`</script>`。被吞掉的往往是 `</head>`、`<body class="… enable-banner …">`、主题自己的配置
-元素（例如 Ethereal 的 `#config-carrier`）。服务端返回 200、日志里一句错都没有。
-
-**自检**（任意页面控制台）：
+**自检**（页面控制台）：
 
 ```js
 // 源 HTML 里 <body> 上的属性，必须都还在 DOM 上
-[...document.body.attributes].map(a => a.name)
-// 主题自己的配置元素在不在（按主题换选择器）
+[...document.body.attributes].map((a) => a.name)
+// 主题自己的配置元素（按主题换选择器，Ethereal 是 #config-carrier）
 document.getElementById('config-carrier')
 ```
 
-如果 body 上的 `class` / `style` / `data-*` 比源 HTML 少，就是这个问题 —— 升级到 0.1.2 即可。
+body 上的 `class` / `style` / `data-*` 比源 HTML 少，就是被自闭合 `<script/>` 吞掉了。
 
-### 排障：切页面后她不见了 / 失效（0.1.3 修）
+### 切页面后她不见了 / 位置失效
 
-主题的软导航（Ethereal 用的是 **Swup**）会重写 `<head>`：注入的 `<style>` 与动态加载的
-脚本标签会被删掉。规则：**脚本代码不会卸载**（已经在跑的自愈循环照跑），但**样式会没**，
-而 `canvas` 也可能被局部重建。
-
-现在的兜底（0.1.3）：
-
-- 位置 / 层级 / 交互的底线写在**行内**，样式表丢了也不会变成普通块级元素；
-- 样式表不见了，`pet-halo.js` 用一份内容副本**原样补回**（不另写一套，不会漂移）；
-- 根还在、但 `canvas` 连续 ~6 秒没有 ⇒ 重建；
-- 挂载点整个被换掉 ⇒ 重新挂载（软导航事件 + 2 秒轮询兜底）。
-
-排障读口（站点页面控制台）：
+主题的软导航（Ethereal 用 Swup）会重写 `<head>`：注入的 `<style>` 与动态脚本标签被删掉，
+`canvas` 也可能被换掉。现在的兜底是：位置 / 层级 / 交互的底线写在**行内**；样式表丢了用
+内容副本补回；`canvas` 连续约 6 秒不见就重建；挂载点被换掉就重挂（软导航事件 + 2 秒轮询）。
 
 ```js
 window.__dshLive2dPetHalo.diag()
@@ -139,70 +72,30 @@ window.__dshLive2dPetHalo.diag()
 //   containerPosition, containerSize, appliedCount, lastEvent, errors }
 ```
 
-`lastEvent` 会写 `soft-nav` / `watchdog` / `canvas-watchdog` 之类，一眼看出是谁救的场。
+`lastEvent` 会写 `soft-nav` / `watchdog` / `canvas-watchdog`，一眼看出是谁救的场。
 
-### 升级后一定要看到新版本？看 URL 里的版本号
+### 确认访客拿到的是新版本
 
-Halo 的插件静态资源响应头是 `cache-control: max-age=31536000`（一年）。所以**公开路径里带
-版本号**：
+Halo 给插件静态资源的响应头是 `cache-control: max-age=31536000`，所以公开路径里带版本号
+（`/plugins/whale-pet-live2d/assets/v<版本>/…`）。升级插件即换前缀，不需要访客清缓存。
+页面里 `window.__dshLive2dPetBoot.config.base` 就是当前实际用的前缀。
 
-```
-/plugins/whale-pet-live2d/assets/v0.1.3/pet-shim.js
-```
-
-升级插件即换前缀 ⇒ catalog、client.js、vendor、贴图、动作全部重新取，访客不需要手动清缓存。
-
-### 换了主题之后想自检一遍
-
-插件与主题是解耦的（我们只往 `<head>` 注入一个完整闭合的 `<script>`，并在 `body` 末尾挂一个
-零尺寸、固定定位的挂载点），但主题的 CSS/软导航千差万别。想在本地核一遍：
+## 构建与验证
 
 ```bash
-# 1) 本机起一个 Halo（H2 默认配置）+ 初始化
-java -jar halo.jar --halo.work-dir=/tmp/halo --server.port=8099 \
-     --halo.external-url=http://127.0.0.1:8099 --halo.security.basic-auth.disabled=false
-curl -X POST http://127.0.0.1:8099/system/setup \
-     -d 'username=admin&password=admin12345&email=a@b.c&siteTitle=t&language=zh-CN&externalUrl=http://127.0.0.1:8099'
+# 静态资源是生成的：改过 dsh-live2d-pet/lib/ 或宠物之后必须重跑
+node tools/build-halo-plugin.mjs            # 生成
+node tools/build-halo-plugin.mjs --check    # 只校验产物与源一致
 
-# 2) 装主题并激活（zip 里 theme.yaml 必须在根目录；源码 zip 不行）
-curl -u admin:admin12345 -X POST \
-     http://127.0.0.1:8099/apis/api.console.halo.run/v1alpha1/themes/install -F "file=@主题.zip"
-curl -u admin:admin12345 -X PUT \
-     http://127.0.0.1:8099/apis/api.console.halo.run/v1alpha1/themes/<主题名>/activation
-
-# 3) 跑同一套 22 项检查（换主题后重跑这一条即可）
-node tools/halo-smoke.mjs --base http://127.0.0.1:8099 \
-     --jar halo-plugin/build/libs/whale-pet-live2d-<版本>.jar --user admin --pass admin12345
-```
-
-已在这些主题上跑过：**theme-earth**（Halo 官方默认）22/22、**theme-hao** 22/22
-（它自身有一个 `/null` 404，属于主题问题，检查里会单独标注"与插件无关"）、
-**Ethereal**（Swup 软导航，就是前面 banner/切页那两条报障的现场）。
-
-### 建议：给静态资源加长缓存
-
-模型约 4.3 MB。插件的静态资源由 Halo 发出（带 `Last-Modified` 验证），生产站点建议在
-反向代理 / CDN 上给 `/plugins/whale-pet-live2d/assets/pet/**` 配长缓存，否则每次冷加载都要重下。
-
-## 开发与验证
-
-静态资源是**生成**的（`src/main/resources/pet/` 里除 `pet-shim.js`、`pet-halo.js`、
-`README.md`、`LICENSES.md` 四个手写文件外，都由脚本产出）：
-
-```bash
-node tools/build-halo-plugin.mjs            # 生成（改过 lib/ 或宠物之后必须重跑）
-node tools/build-halo-plugin.mjs --check    # 只校验产物与源同步
-
-cd halo-plugin && ./gradlew build           # 需要 JDK 21；产物 build/libs/*.jar
+cd halo-plugin && ./gradlew build           # JDK 21；产物 build/libs/whale-pet-live2d-<版本>.jar
 
 cd tools/browser-test
-node run-suite.mjs halo halo-tree --jobs 1  # 静态托管契约 + 产物自洽（无需 Halo）
+node run-suite.mjs halo halo-tree --jobs 1  # 静态托管契约 + 产物自洽，不需要起 Halo
 ```
 
-**真 Halo 的冒烟测试**（验注入、设置读取、ReverseProxy 与真浏览器里的启动）：
+**真 Halo 冒烟**（注入、设置读取、ReverseProxy 与真浏览器里的启动，23 项）：
 
 ```bash
-# 起一个本地 Halo（H2 默认配置，仅本地验证用）
 java -jar halo.jar --halo.work-dir=/tmp/halo --server.port=8099 \
      --halo.external-url=http://127.0.0.1:8099 --halo.security.basic-auth.disabled=false
 curl -X POST http://127.0.0.1:8099/system/setup \
@@ -212,5 +105,18 @@ node tools/halo-smoke.mjs --base http://127.0.0.1:8099 \
      --jar halo-plugin/build/libs/whale-pet-live2d-0.2.0.jar --user admin --pass admin12345
 ```
 
-工程记录（Halo 扩展点的硬事实、踩过的坑）在
-[`.dsh/skills/halo-plugin/SKILL.md`](../.dsh/skills/halo-plugin/SKILL.md)。
+换主题之后想重跑一遍：装主题 → 激活 → 再跑上面最后那条命令。
+
+```bash
+curl -u admin:admin12345 -X POST \
+     http://127.0.0.1:8099/apis/api.console.halo.run/v1alpha1/themes/install -F "file=@主题.zip"
+curl -u admin:admin12345 -X PUT \
+     http://127.0.0.1:8099/apis/api.console.halo.run/v1alpha1/themes/<主题名>/activation
+```
+
+## 改代码时的两条纪律
+
+1. **`src/main/resources/pet/` 里除 4 个手写文件外都是生成的**（`pet-shim.js`、`pet-halo.js`、
+   `README.md`、`LICENSES.md` 是手写）—— 不手改生成物，改源头后重跑生成器，提交前跑 `--check`。
+2. **专有运行时与美术许可照旧**：Cubism Core 不随包分发（catalog 里写官方 CDN，站长可改自建）；
+   模型是 CC BY-NC-SA 4.0（非商业），随包必须带 `pet/LICENSES.md` 与三位作者的署名。

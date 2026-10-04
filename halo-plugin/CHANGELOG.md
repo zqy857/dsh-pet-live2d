@@ -18,6 +18,8 @@ Live2D Cubism Core **不随包分发**（默认走 Live2D 官方 CDN，可在插
 Halo 里没有 DeepSeek Harness，"dsh" 对 Halo 用户是噪声。插件 id 决定资源 URL
 （`/plugins/whale-pet-live2d/assets/...`），发布后再改等于换一个插件，所以趁首次发布改掉。
 
+下面几条是 0.1.x 时的修复记录（当时插件 id 还是 `dsh-pet-live2d`），都已包含在 0.2.0 里。
+
 ### 改：配置放在 `application/json` 标签体里
 
 配置从"挂在 `data-config` 属性上"改成

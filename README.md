@@ -5,9 +5,9 @@
 自带 **DS鲸鱼娘**（8 组动作 + 44 个表情/道具 + 20 个装扮槽），装完即用。
 
 > 插件 id：`whale-pet-live2d` · 要求 **Halo ≥ 2.21**（JDK 21）
-> 上游：[A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)（DSH 桌宠插件，MIT）——
-> 本仓库是它的 fork，`halo-plugin/` 是新增并维护的 Halo 插件；上游那套 DSH 文档在
-> [`dsh-live2d-pet/README.md`](dsh-live2d-pet/README.md)。
+> 本仓库是 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)（DSH 桌宠插件，MIT）
+> 的 fork：`halo-plugin/` 是 Halo 插件本体，`dsh-live2d-pet/` 是它复用的桌宠客户端与宠物包
+> （上游 DSH 的文档也在那里）。
 
 <p align="center">
   <a href="https://github.com/zqy857/whale-pet-live2d/releases"><img src="https://img.shields.io/github/v/release/zqy857/whale-pet-live2d?style=flat-square&amp;label=release" alt="Release"></a>
@@ -84,12 +84,24 @@ node tools/halo-smoke.mjs --base http://127.0.0.1:8099 \
 
 | 路径 | 是什么 |
 |---|---|
-| `halo-plugin/` | **Halo 2.x 插件**（Java + 注入规格 + 生成好的静态资源 + 自己的 [CHANGELOG](halo-plugin/CHANGELOG.md)） |
+| `halo-plugin/` | **Halo 2.x 插件**：Java 代码、注入规格、生成好的静态资源、[工程说明](halo-plugin/README.md) 与 [CHANGELOG](halo-plugin/CHANGELOG.md) |
 | `tools/build-halo-plugin.mjs` | 从下面那份客户端/宠物**生成**插件静态资源，并自检（版本化前缀、闭包、不含专有运行时） |
 | `tools/halo-smoke.mjs` | 真 Halo 端到端冒烟（安装 / 注入 / 渲染 / 自愈 / 图标） |
 | `tools/browser-test/` | 浏览器回归基建（`cdp-halo.mjs` = Halo 静态托管契约，`test-halo-tree.mjs` = 产物自洽） |
 | `dsh-live2d-pet/` | **上游 DSH 插件**：浏览器半区（`lib/client.js`）、宠物包、DSH 宿主实现 —— 插件静态资源的来源 |
 | `dsh-live2d-pet-desktop/` | 上游桌面端（Tauri 壳），本 fork 不涉及 |
+
+## 隐私、外部请求与体积
+
+- **外部请求只有一处**：默认从 Live2D 官方 CDN 取一次专有运行时
+  `https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js`（约 200 KB）。
+  Cubism Core 是 Live2D Inc. 的专有软件，本插件不打包、不转发；站长可在设置里换成自建地址
+  （离线部署走这一条）。除此之外插件不向任何第三方发请求；
+- **不收集、不上传任何访客数据**，没有遥测。桌宠的位置、大小、装扮只存在**访客自己的浏览器**
+  （localStorage，键名沿用上游客户端的 `dsh-pet-live2d.*`）；停用插件后前台不再注入任何标签；
+- **体积**：前端资源约 5.1 MB（模型 4.3 MB + 渲染引擎 0.8 MB + 客户端与 React 0.5 MB），
+  首次访问时加载。生产站点建议在反向代理 / CDN 上给
+  `/plugins/whale-pet-live2d/assets/**` 加长缓存。
 
 ## 许可与署名
 
@@ -100,6 +112,9 @@ node tools/halo-smoke.mjs --base http://127.0.0.1:8099 \
   [氵六青](https://space.bilibili.com/11272072)；详表见 [`halo-plugin/src/main/resources/pet/LICENSES.md`](halo-plugin/src/main/resources/pet/LICENSES.md)。
   站点若有广告/付费内容并把它当卖点，属商业用途，需**分别**取得授权；
 - **与 DeepSeek 官方无任何关系**：角色形象是社区基于 DeepSeek 元素的同人二创，本插件不是官方产品；
-- **Live2D Cubism Core** 是 Live2D Inc. 的专有软件，本仓库**不分发**它。
+- **Live2D Cubism Core** 是 Live2D Inc. 的专有软件，本仓库**不分发**它；
+- **致谢**：插件的配置注入方式（把配置放进 `<script type="application/json">` 的标签体，
+  而不是 HTML 属性）借鉴了社区插件 [LIlGG/plugin-live2d](https://github.com/LIlGG/plugin-live2d)；
+  本插件在此之上保留"外部加载脚本、页面里没有可执行内联脚本"的做法。
 
 想要 DSH / 桌面端版本，请去上游 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)。

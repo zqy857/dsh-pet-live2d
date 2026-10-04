@@ -5,14 +5,13 @@ kind: Plugin
 metadata:
   # 这个名字决定插件资源路由：/plugins/whale-pet-live2d/**
   name: whale-pet-live2d
-  # 上架应用市场后，把应用管理页里看到的 app-id 填进来（形如 app-xxxxxxxx）：
-  # 这样手动装 jar 的那份也保留市场身份，能收到市场里的更新提示。
+  # 上架应用市场后填上 app-id（形如 app-xxxxxxxx）：手动装的 jar 也能保留市场身份。
   # annotations:
   #   "store.halo.run/app-id": "app-xxxxxxxx"
 spec:
   enabled: true
   # 2.21 起 Halo 要求 Java 21，所以基线不低于 2.21.0。
-  # 已实测：2.21.0 与 2.26.0 上均 22/22 通过（tools/halo-smoke.mjs）。
+  # 2.21.0 与 2.26.0 均通过 tools/halo-smoke.mjs 的 23 项检查。
   requires: ">=2.21.0"
   # 注意：下面的 version 会被 devtools 插件按 gradle.properties 的 version 覆盖写入，
   # 改版本请改 gradle.properties，不要只改这里。
@@ -22,7 +21,7 @@ spec:
   settingName: whale-pet-live2d-settings
   configMapName: whale-pet-live2d-configmap
   displayName: "鲸鱼娘桌宠（Live2D）"
-  # 审核要求：logo 不能用插件模板的默认图标。它由 ReverseProxy 的 /logo/** 固定路径发出。
+  # 插件图标：由 ReverseProxy 的 /logo/** 固定路径发出（不随版本变更）。
   logo: "/plugins/whale-pet-live2d/assets/logo/logo.png"
   repo: "https://github.com/zqy857/whale-pet-live2d"
   homepage: "https://github.com/zqy857/whale-pet-live2d"
