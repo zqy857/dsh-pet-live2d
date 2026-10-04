@@ -1,0 +1,50 @@
+// 本文件是 Halo 2.x 插件「DSH 桌宠 Live2D」的构建脚本。
+// 骨架取自 Halo 官方 plugin-starter，但按本项目需要做了裁剪：
+//   * 去掉 ui 子模块（本插件还没有独立控制台前端）
+//   * 去掉 io.freefair.lombok（空壳不需要，且任务要求不多引入额外插件）
+// 编译平台锁定 2.21.0：Halo 2.21 起才要求 Java 21，与本机工具链一致。
+plugins {
+    id 'java'
+    id 'run.halo.plugin.devtools' version '0.8.0'
+}
+
+group = 'run.halo.whalepetlive2d'
+
+repositories {
+    // 只用 Maven Central：repo.halo.run 在当前网络不可达（TLS 失败）。
+    // 已实测 run.halo.tools.platform:plugin 与 run.halo.app:api 都在 Central 上。
+    mavenCentral()
+}
+
+dependencies {
+    // 平台 BOM：由它统一管理 run.halo.app:api 等依赖的版本
+    implementation platform('run.halo.tools.platform:plugin:2.21.0')
+    // 编译期只需要 Halo 的 API（运行时由 Halo 主程序提供，绝不能打进插件 jar）
+    compileOnly 'run.halo.app:api'
+
+    testImplementation 'run.halo.app:api'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    // 中文注释与中文字符串必须按 UTF-8 编译，否则会变成乱码
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// devtools 插件用它来跑 haloServer 之类的开发任务；本仓库只做离线构建，
+// 不会触发这些需要联网拉 Halo 发行版的任务。
+halo {
+    version = '2.21.0'
+}

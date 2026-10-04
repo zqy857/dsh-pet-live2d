@@ -1,0 +1,15 @@
+# 本文件由 tools/build-halo-plugin.mjs 生成，不要手改。
+# 规则路径里带**版本号**：Halo 的静态资源缓存是 max-age=31536000（一年），
+# 固定路径会让升级后的新 JS 一年都到不了访客浏览器（真站踩过）。
+apiVersion: plugin.halo.run/v1alpha1
+kind: ReverseProxy
+metadata:
+  name: whale-pet-live2d-assets
+rules:
+  - path: /v0.2.0/**
+    file:
+      directory: pet
+  # 插件图标：固定路径（不带版本），plugin.yaml 的 spec.logo 指向这里。
+  - path: /logo/**
+    file:
+      directory: logo

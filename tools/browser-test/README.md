@@ -6,11 +6,15 @@
 ## 跑
 
 ```bash
-npm install              # 提供 React UMD（server.mjs 从 node_modules 直接读）
+npm install              # 提供 React UMD；装不上也没关系，server.mjs 会回落到 vendor/react/
 npm run dev -- head      # 【日常用这个】只跑匹配的 driver，几十秒
 npm run dev              # 同上，但常驻监听：改动 client.js / index.js / pet.json 自动重跑
-npm run suite            # 【提交前】全部 14 个 driver，并发跑
+npm run suite            # 【提交前】全部 driver，并发跑
+npm run suite -- halo    # Halo 那两条（静态托管契约 + 产物自洽），不需要装 Halo
 ```
+
+（Halo 插件的**真 Halo** 冒烟测试不在这套里 —— 它需要一台跑着的 Halo，见
+[`tools/halo-smoke.mjs`](../halo-smoke.mjs)。）
 
 耗时（本机 20 核）：
 

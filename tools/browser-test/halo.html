@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh">
+
+<head>
+  <meta charset="utf-8">
+  <title>halo-harness</title>
+</head>
+
+<body style="margin:0;background:#101725;color:#d8e3ff;font:13px/1.6 system-ui,sans-serif">
+  <!--
+    模拟 Halo 插件的注入：`TemplateHeadProcessor` 往页面里放两段东西 ——
+    一个**配置块**（`<script type="application/json">`，配置在标签体里，不存在属性转义问题）
+    和一个**外部加载脚本**（不是内联可执行脚本，CSP 友好）。
+    其余文件由 pet-shim.js 按序加载 —— 与插件在真站上的行为逐字一致。
+
+    coreUrl 指向 harness 的本地路由：Cubism Core 不随插件分发，测试也不想依赖外网。
+  -->
+  <script type="application/json" id="whale-pet-live2d-config">{"base":"__PET_BASE__","coreUrl":"/halo-core/live2dcubismcore.min.js","phases":true}</script>
+  <script defer src="__PET_BASE__/pet-shim.js"></script>
+
+  <h1 style="margin:24px">Halo 静态托管验证页</h1>
+  <p style="margin:24px;opacity:.7">
+    这一页只做一件事：证明桌宠在**没有任何宿主路由**的静态托管下能跑起来。
+    driver 会断言整页没有一次 <code>/api/live2d-pet/*</code> 请求。
+  </p>
+
+  <!-- 一个"评论表单"与一个"站内搜索框"：验相位驱动（聚焦→asking、提交→done、搜索→thinking） -->
+  <form id="comment-form" style="margin:24px">
+    <textarea name="content" placeholder="说点什么" style="width:320px;height:80px"></textarea>
+    <div><button type="submit">提交评论</button></div>
+  </form>
+  <form id="search-form" role="search" style="margin:24px" onsubmit="return false">
+    <input type="search" name="keyword" placeholder="搜索" style="width:240px">
+  </form>
+</body>
+
+</html>

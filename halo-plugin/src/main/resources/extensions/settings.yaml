@@ -1,0 +1,59 @@
+# 插件设置。metadata.name 必须与 plugin.yaml 的 spec.settingName 完全一致，
+# 不一致插件会在启动阶段直接失败。
+#
+# 这里每个 form 的 group 会成为 ConfigMap 里的一个 data 键，
+# 处理器用 settingFetcher.getValues().get("basic") 读回来。
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: whale-pet-live2d-settings
+spec:
+  forms:
+    - group: basic
+      label: 基本设置
+      formSchema:
+        - $formkit: switch
+          name: enabled
+          label: 启用桌宠
+          value: true
+          help: 关闭后前台页面不再注入桌宠脚本（一个标签都不输出）。
+
+        - $formkit: text
+          name: cubismCoreUrl
+          label: Cubism Core 地址
+          value: ""
+          placeholder: 留空则使用 Live2D 官方 CDN
+          help: >-
+            Live2D Cubism Core 是专有运行时，本插件不分发它。留空表示使用 catalog 里
+            记录的 Live2D 官方 CDN 地址；有自建镜像或离线部署需求时可在此换成自己的地址。
+
+        - $formkit: switch
+          name: phaseEvents
+          label: 启用「博客事件 → 相位」
+          value: true
+          help: 打开后，页面的评论、搜索等事件会驱动桌宠切换相位。
+
+        - $formkit: text
+          name: commentSelectors
+          label: 评论区域选择器
+          value: ""
+          placeholder: 逗号分隔，留空使用内置默认
+          help: 用于识别页面上「评论区」的 CSS 选择器，多个用英文逗号分隔。
+
+        - $formkit: text
+          name: searchSelectors
+          label: 搜索区域选择器
+          value: ""
+          placeholder: 逗号分隔，留空使用内置默认
+          help: 用于识别页面上「搜索框」的 CSS 选择器，多个用英文逗号分隔。
+
+        - $formkit: textarea
+          name: phaseOverridesJson
+          label: 默认覆盖表（JSON）
+          value: ""
+          placeholder: '{"lines": {"phase": {"asking": "等你说点什么～"}}}'
+          help: >-
+            可选。一段 JSON，作为桌宠本地存档的**默认值**（访客自己改过的仍然优先）。
+            可用的顶层键：phases（相位池子）、fidget（摸鱼池）、relations（选项关系）、
+            interactions（互动反应）、lines（台词，其中 lines.phase 按相位给一句）。
+            留空表示全部用内置默认；写坏的 JSON 会被忽略，不影响页面渲染。

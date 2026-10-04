@@ -19,6 +19,7 @@ import { spawn, execFileSync } from 'node:child_process'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { rmSync } from 'node:fs'
 import { cpus } from 'node:os'
+import { fileURLToPath } from 'node:url'
 import { PROFILES } from './paths.mjs'
 // 清单在**纯数据模块**里：这个文件一 import 就会开跑（顶层执行），所以任何想读清单的
 // 工具（计时统计等）只能 import 那个模块，不能反过来 import 这个跑者。
@@ -55,7 +56,11 @@ async function startServer(port) {
   // scan (which reads the whole model directory) can take well over the six
   // seconds a single-driver run needed.
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const proc = spawn(process.execPath, [new URL('./server.mjs', import.meta.url).pathname.replace(/^\//, ''), String(port)], { stdio: ['ignore', 'pipe', 'pipe'] })
+    // **不要用 `new URL(...).pathname`**：POSIX 上带非 ASCII 的路径会拿到百分号编码
+    // （`/home/u/%E4%B8%8B%E8%BD%BD/...`），再 `.replace(/^\//,'')` 就变成相对路径，
+    // 于是 node 去找 `<cwd>/home/u/...` ⇒ MODULE_NOT_FOUND。`fileURLToPath` 才是解码过的本地路径。
+    const serverEntry = fileURLToPath(new URL('./server.mjs', import.meta.url))
+    const proc = spawn(process.execPath, [serverEntry, String(port)], { stdio: ['ignore', 'pipe', 'pipe'] })
     let died = false
     proc.stdout.on('data', () => {})
     proc.stderr.on('data', (d) => { process.stderr.write('[server ' + port + '] ' + d) })
@@ -135,7 +140,7 @@ async function runDriver(file, slot) {
   const base = server?.base
   try {
     return await new Promise((resolve) => {
-      const child = spawn(process.execPath, [new URL('./' + file, import.meta.url).pathname.replace(/^\//, '')], {
+      const child = spawn(process.execPath, [fileURLToPath(new URL('./' + file, import.meta.url))], {
         stdio: ['ignore', 'pipe', 'pipe'],
         env: { ...process.env, ...(base === undefined ? {} : { PET_BASE: base, PET_PORT: String(PORT_BASE + slot) }) },
       })

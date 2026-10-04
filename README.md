@@ -167,6 +167,37 @@ dsh plugin --profile web remove dsh-pet-live2d   # 卸载（%DSH_HOME%\pets\ 里
 槽位 / 池子 / 相位 / 动作语义的完整契约见
 [`dsh-live2d-pet/README.md#做一只自己的宠物`](dsh-live2d-pet/README.md#做一只自己的宠物)。
 
+## 挂到 Halo 站点上（`halo-plugin/`，本 fork 新增）
+
+Halo 插件由 [zqy857](https://github.com/zqy857) 维护，插件 id 是 **`whale-pet-live2d`**
+（Halo 里没有 DeepSeek Harness，`dsh` 对 Halo 用户是噪声）。上游 DSH 插件本体仍是
+[A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)。
+
+同一份浏览器半区跑在 **Halo 2.x** 上（Java 插件，要求 Halo ≥ 2.21 / JDK 21）：
+
+- `ReverseProxy` 把 jar 里的 `pet/` 发到 `/plugins/whale-pet-live2d/assets/v<版本>/**` ——
+  路径带版本号，因为 Halo 给插件静态资源发 `cache-control: max-age=31536000`，
+  固定路径会让升级后最长一年到不了访客浏览器；
+- `TemplateHeadProcessor` 往 `<head>` 注入一个配置块（`<script type="application/json">`）
+  与一个**外部**加载脚本：没有可执行的内联脚本，也不会有自闭合 `<script/>` 吞掉主题标记的问题；
+- Halo 侧**没有** `/api/live2d-pet/*`：catalog 与资产都是静态文件，相位改由**页面事件**驱动
+  （聚焦评论框 = `asking`、提交评论 = `done`、站内搜索 = `thinking`），主题也可以调
+  `window.__haloPetPhase("done")`；
+- 主题软导航（Swup/PJAX 之类）重写 `<head>` 后，位置/层级走**行内**、样式表用副本补回、
+  画布与挂载点都有自愈；
+- Cubism Core **不随包分发**（默认 Live2D 官方 CDN，可改自建）；模型是
+  CC BY-NC-SA 4.0（署名 · **非商业**）。
+
+```bash
+node tools/build-halo-plugin.mjs                 # 生成插件内的静态资源（改过 lib/ 或宠物后必须重跑）
+cd halo-plugin && ./gradlew build                # 需要 JDK 21，产物在 build/libs/*.jar
+cd tools/browser-test && node run-suite.mjs halo halo-tree --jobs 1   # 静态托管契约 + 产物自洽
+```
+
+细节（注入规格、设置项、许可与致谢）见
+[`halo-plugin/README.md`](halo-plugin/README.md) 与
+[`halo-plugin/CHANGELOG.md`](halo-plugin/CHANGELOG.md)。
+
 ## 目录结构
 
 ```

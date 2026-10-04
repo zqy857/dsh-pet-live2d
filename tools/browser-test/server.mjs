@@ -3,10 +3,11 @@
 // + a fake __ModuleLoader__). Nothing here ships; it exists so the plugin can
 // be driven end-to-end from a headless browser.
 import { createServer } from 'node:http'
-import { readFileSync, existsSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { dirname, extname, join, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { HERE, PLUGIN, PROFILES } from './paths.mjs'
+import { HERE, PLUGIN, PROFILES, ROOT } from './paths.mjs'
 
 const PORT = Number(process.argv[2] ?? 8793)
 
@@ -67,6 +68,92 @@ const routes = buildRoutes(hub, displayLayer, displayHome)
 const byPath = new Map(routes.filter((r) => r.kind === 'exact').map((r) => [r.path, r]))
 const prefixes = routes.filter((r) => r.kind === 'prefix').sort((a, b) => b.path.length - a.path.length)
 
+// ------------------------------------------------------- Halo 静态托管（模拟）
+
+/**
+ * 生成好的 Halo 插件静态目录（`tools/build-halo-plugin.mjs` 的产物）。
+ *
+ * 公开前缀**带版本号**（`/plugins/whale-pet-live2d/assets/v<版本>`），而且它写在生成物
+ * `pet-base.properties` 里 —— 这里直接读那个文件，测试就不会和生成器脱节。
+ */
+const HALO_PET_DIR = join(ROOT, 'halo-plugin', 'src', 'main', 'resources', 'pet')
+const HALO_BASE = (() => {
+  try {
+    const text = readFileSync(join(ROOT, 'halo-plugin', 'src', 'main', 'resources', 'pet-base.properties'), 'utf8')
+    const hit = /^\s*base\s*=\s*(\S+)\s*$/m.exec(text)
+    if (hit !== null) return hit[1].replace(/\/+$/, '')
+  } catch { /* 没生成过就退回不带版本的老路径 */ }
+  return '/plugins/whale-pet-live2d/assets/pet'
+})()
+const HALO_ASSET_PREFIX = HALO_BASE + '/'
+const HALO_MIME = {
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  // 未知扩展（`.moc3`、以及没有扩展名的 `catalog`）就是二进制流 —— 引擎与
+  // `response.json()` 都不看 Content-Type，正好顺便把"没扩展名也能取到"这条验了。
+}
+/** Cubism Core 的服务端缓存：浏览器侧从 `/halo-core/...` 取，不碰外网。 */
+const HALO_CORE_CACHE = join(PROFILES, '_halo-core', 'live2dcubismcore.min.js')
+const CORE_CDN = 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js'
+
+function serveHaloAsset(pathname, res) {
+  let rel
+  try {
+    rel = pathname.slice(HALO_ASSET_PREFIX.length).split('/').map(decodeURIComponent).join('/')
+  } catch {
+    res.writeHead(400); res.end('bad path'); return
+  }
+  const file = resolve(HALO_PET_DIR, rel)
+  // 目录穿越的第二层：解析后的路径必须还在静态根里面。
+  if (file !== HALO_PET_DIR && !file.startsWith(HALO_PET_DIR + sep)) {
+    res.writeHead(403); res.end('forbidden'); return
+  }
+  if (!existsSync(file) || statSync(file).isDirectory()) {
+    res.writeHead(404); res.end('missing ' + rel); return
+  }
+  res.writeHead(200, {
+    'content-type': HALO_MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
+    'cache-control': 'no-store',
+  })
+  res.end(readFileSync(file))
+}
+
+/**
+ * Cubism Core：**不随插件分发**（见 LICENSES.md），所以产物里没有它。
+ *
+ * 测试也不该依赖外网：先看本机 `$DSH_HOME/pets/.runtime/` 有没有（DSH 那边本来就
+ * 让用户放这儿），没有再从官方 CDN 取一次并缓存。**取的动作在服务端** —— 浏览器侧
+ * 始终只访问 127.0.0.1，这样 driver 那条"整页没有外部请求"的断言才成立。
+ */
+async function serveCubismCore(res) {
+  const local = [
+    join(process.env.DSH_HOME ?? join(homedir(), '.dsh'), 'pets', '.runtime', 'live2dcubismcore.min.js'),
+    HALO_CORE_CACHE,
+  ]
+  let file = local.find((candidate) => {
+    try { return existsSync(candidate) && statSync(candidate).size > 10000 } catch { return false }
+  })
+  if (file === undefined) {
+    try {
+      const upstream = await fetch(CORE_CDN, { redirect: 'follow' })
+      if (!upstream.ok) throw new Error('HTTP ' + upstream.status)
+      const bytes = Buffer.from(await upstream.arrayBuffer())
+      if (!bytes.includes('Live2DCubismCore')) throw new Error('unexpected payload')
+      mkdirSync(dirname(HALO_CORE_CACHE), { recursive: true })
+      writeFileSync(HALO_CORE_CACHE, bytes)
+      file = HALO_CORE_CACHE
+    } catch (error) {
+      res.writeHead(502, { 'content-type': 'text/plain' })
+      res.end('cubism core unavailable: ' + String(error?.message ?? error))
+      return
+    }
+  }
+  res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' })
+  res.end(readFileSync(file))
+}
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x')
   const pathname = url.pathname
@@ -87,14 +174,21 @@ const server = createServer(async (req, res) => {
     return
   }
   if (pathname === '/react.js' || pathname === '/react-dom.js') {
-    // Served from the harness' own dependencies, so no UMD copy is vendored.
-    const rel = pathname === '/react.js'
-      ? join('react', 'umd', 'react.development.js')
-      : join('react-dom', 'umd', 'react-dom.development.js')
-    const file = join(HERE, 'node_modules', rel)
-    if (!existsSync(file)) {
+    // 先看 harness 自己的 node_modules（`npm install` 得到的那份，和 CI 一致）；
+    // 拿不到就回落到仓库里 vendored 的同一版本 —— 有些环境里 npm 装不了包
+    // （`EALLOWREMOTE: Fetching packages of type "remote" have been disabled`），
+    // 而这里一旦 500，宠物整个不启动，症状是**一整套 driver 全红**且离根因很远。
+    const name = pathname === '/react.js' ? 'react.development.js' : 'react-dom.development.js'
+    const pkg = pathname === '/react.js' ? 'react' : 'react-dom'
+    const candidates = [
+      join(HERE, 'node_modules', pkg, 'umd', name),
+      join(ROOT, 'vendor', 'react', '18.3.1', name),
+    ]
+    const file = candidates.find((candidate) => existsSync(candidate))
+    if (file === undefined) {
       res.writeHead(500, { 'content-type': 'text/plain' })
-      res.end('missing ' + file + ' -- run npm install in tools/browser-test first.')
+      res.end('missing React UMD; tried:\n' + candidates.join('\n')
+        + '\n-- run `npm install` in tools/browser-test, or restore vendor/react/18.3.1/.')
       return
     }
     res.writeHead(200, { 'content-type': 'application/javascript' })
@@ -181,6 +275,27 @@ const server = createServer(async (req, res) => {
     res.end(JSON.stringify({
       event, handlers: handlers.length, resumed, phaseAtNext, phase: hub.snapshot().phase,
     }))
+    return
+  }
+
+  // ---------------- Halo 静态托管（模拟 ReverseProxy）----------------
+  //
+  // 这一段**故意不落任何 `/api/live2d-pet/*`**：Halo 那边也没有那些路由。页面
+  // （`/halo`）用一个带 `data-config` 的 `<script>` 启动 `pet-shim.js`，配置指向这个
+  // 静态目录；driver 会断言"整页没有一次 /api/live2d-pet 请求"。
+  if (pathname === '/halo') {
+    // 版本化前缀写进页面里（和插件注进去的 data-config 一样），测试就不会和生成器脱节。
+    const page = readFileSync(join(HERE, 'halo.html'), 'utf8').replaceAll('__PET_BASE__', HALO_BASE)
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+    res.end(page)
+    return
+  }
+  if (pathname === '/halo-core/live2dcubismcore.min.js') {
+    await serveCubismCore(res)
+    return
+  }
+  if (pathname.startsWith(HALO_ASSET_PREFIX)) {
+    serveHaloAsset(pathname, res)
     return
   }
 

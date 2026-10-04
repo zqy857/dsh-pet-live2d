@@ -18,6 +18,7 @@ import { spawn } from 'node:child_process'
 import { watch, existsSync } from 'node:fs'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { HERE, PLUGIN } from './paths.mjs'
 
 const argv = process.argv.slice(2)
@@ -35,7 +36,9 @@ let queued = false
 const run = () => {
   if (child !== null) { queued = true; return }
   console.log('\n=== ' + new Date().toLocaleTimeString() + '  running ' + (only.length ? only.join(', ') : 'the whole suite') + ' ===')
-  child = spawn(process.execPath, [new URL('./run-suite.mjs', import.meta.url).pathname.replace(/^\//, ''), ...only], { stdio: 'inherit' })
+  // 同 run-suite.mjs：`new URL(...).pathname` 在非 ASCII 的 POSIX 路径下是百分号编码的，
+  // 直接当文件路径用会找不到文件。
+  child = spawn(process.execPath, [fileURLToPath(new URL('./run-suite.mjs', import.meta.url)), ...only], { stdio: 'inherit' })
   child.on('close', () => {
     child = null
     if (queued) { queued = false; run() }

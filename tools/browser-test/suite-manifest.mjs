@@ -24,6 +24,8 @@ export const SUITE = {
   'cdp-interact.mjs': '互动与气泡：摸尾巴/转圈转晕/相位台词/文本·位置·开关可配',
   'cdp-react-defaults.mjs': '互动反应候选的内置默认值：宠物没声明那三组也演得出来',
   'cdp-settings-render.mjs': '设置正文真的渲染得出来（挂在宠物组件之外的组件不许读到组件内的 ref）',
+  'test-halo-tree.mjs': 'Halo 插件静态产物自洽：catalog/闭包/许可/ReverseProxy/Setting 名字对得上',
+  'cdp-halo.mjs': 'Halo 静态托管（无宿主路由）：静态启动 + 页面事件驱动的相位 + 软导航重挂',
 }
 
 /**

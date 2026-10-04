@@ -8,7 +8,8 @@ This repository contains two kinds of material under **two different licenses**.
 
 ## 1. 代码 —— MIT
 
-适用于：`dsh-live2d-pet/`（插件本体）、`tools/`（构建与测试工具）、`model-packs/` 中的脚本与清单。
+适用于：`dsh-live2d-pet/`（插件本体）、`halo-plugin/`（Halo 2.x 插件）、
+`tools/`（构建与测试工具）、`vendor/react/` 之外的 `model-packs/` 脚本与清单。
 
 ```
 MIT License — Copyright (c) 2026 A8Chann
@@ -16,11 +17,16 @@ MIT License — Copyright (c) 2026 A8Chann
 
 完整文本见根目录 `LICENSE`。
 
+> `vendor/react/18.3.1/` 放的是 **React 的官方 UMD 构建**（MIT，版权归 Meta /
+> Facebook, Inc.），原样取自 npm，**不是**本项目代码 —— 见该目录的 `README.md`。
+> 它被打进 Halo 插件的静态资源（`pet/react.js`、`pet/react-dom.js`）。
+
 ---
 
 ## 2. 美术资源 —— CC BY-NC-SA 4.0
 
-适用于：`dsh-live2d-pet/pets/ds-whale-girl/`、`model-packs/DS鼠控版/` 中的**模型、贴图、表情、动作**等一切美术内容，
+适用于：`dsh-live2d-pet/pets/ds-whale-girl/`、`model-packs/DS鼠控版/` 中的**模型、贴图、表情、动作**等一切美术内容、
+`halo-plugin/src/main/resources/pet/pets/`（同一份宠物，供 Halo 插件使用），
 以及 `dsh-live2d-pet/docs/` 中的截图。
 
 **这些文件不是 MIT，也不可以按 MIT 使用。**
@@ -74,6 +80,23 @@ Live2D 作者 氵六青 已授权本项目转载与开源该模型。**但该授
 |---|---|---|
 | [pixi.js](https://github.com/pixijs/pixijs) | 8.19.0 | MIT |
 | [untitled-pixi-live2d-engine](https://github.com/Untitled-Story/untitled-pixi-live2d-engine) | 1.3.5 | MIT |
+
+## 5. 本仓库相对上游的新增内容
+
+本仓库是 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d) 的 fork：
+上游代码（`dsh-live2d-pet/`、`dsh-live2d-pet-desktop/`、`tools/` 等）仍是
+**MIT © 2026 A8Chann**，声明原样保留；本 fork 新增的部分（`halo-plugin/` 的 Java 插件与
+Halo 侧脚本、`halo-plugin` 相关的构建与验证工具）为 **MIT © 2026 zqy857**。
+美术资源的许可不变，仍是 CC BY-NC-SA 4.0（见第 2 节）。
+
+## 6. 打进 Halo 插件静态资源的第三方库
+
+| 组件 | 版本 | 许可 | 文件 |
+|---|---|---|---|
+| [React](https://react.dev/) / ReactDOM | 18.3.1 | MIT | `pet/react.js`、`pet/react-dom.js`（源自 `vendor/react/18.3.1/`） |
+
+Halo 页面里没有 DSH 的模块表，所以这个插件自带一份 React；DSH 侧仍然由 DSH 提供 React，
+两处互不影响。
 
 ---
 

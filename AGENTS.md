@@ -1,7 +1,8 @@
 # DSH_Pet_Live2d 项目规则
 
 给 DSH Web GUI 做 Live2D 桌宠插件（`dsh-live2d-pet/`）+ 配套验证工具（`tools/`），
-外加桌面端（`dsh-live2d-pet-desktop/`：单文件便携 exe，Tauri 壳 + 同进程 Rust 宿主半区）。
+外加桌面端（`dsh-live2d-pet-desktop/`：单文件便携 exe，Tauri 壳 + 同进程 Rust 宿主半区），
+以及 Halo 2.x 站点用的插件（`halo-plugin/`：ReverseProxy 发静态资源 + TemplateHeadProcessor 注入启动脚本）。
 模型是 B站@氵六青 的 DS鲸鱼娘（Cubism 5，1 个 .moc3、8 组动作、44 个表情）。
 
 ## 核心规则
@@ -60,6 +61,25 @@
 - 改 lib/client.js 的组件状态、加 useEffect/useCallback、出现"功能没反应但不报错"时，调用 skill：client-state
 - 改插件行为需同步文档，或要跑验证 / 提交前检查 / 发版 / 重启服务时，调用 skill：docs-and-workflow
 - 改 `dsh-live2d-pet-desktop/`（壳 / Rust 宿主半区 / 单文件打包 / 托盘 / 透明与穿透）时，调用 skill：desktop-shell
+- 改 `halo-plugin/`（Halo 静态资源 / 注入脚本 / 博客侧相位 / 插件设置），或 Halo 侧验证红了时，调用 skill：halo-plugin
+
+### Halo 插件（第三个宿主）的三条纪律
+
+**① 静态产物是生成的，别手改。** `halo-plugin/src/main/resources/pet/` 里除 4 个手写文件
+（`pet-shim.js` / `pet-halo.js` / `README.md` / `LICENSES.md`）之外全部由
+`node tools/build-halo-plugin.mjs` 生成 —— catalog 由 `lib/index.js` 的 `buildCatalog()` 算，
+`client.js` / `live2d-vendor.js` 是逐字节副本（生成器会断言相等）。改完源要重新生成，
+提交前跑 `node tools/build-halo-plugin.mjs --check`。
+
+**② Halo 侧不实现宿主半区。** 没有 `/api/live2d-pet/*` 路由：静态目录 + 页面事件。
+所以模块级"问宿主"的循环（`/layer`、`/settings`、相位 SSE）都要能被
+`window.__dshLive2dPetHost = { base, static: true }` 关掉。**但相位通路本身不能一起关**
+（`flushPhaseRef` / 两个 resolver 写在 SSE 那个 effect 里）—— 关多了的症状是
+"`data-phase` 变了、动作不换，而且不报错"。详见 skill：halo-plugin。
+
+**③ 专有运行时与美术许可照旧**：Cubism Core **不随插件分发**（catalog 里写官方 CDN，
+站长可改自建）；模型是 CC BY-NC-SA 4.0（非商业），随插件分发必须带上
+`pet/LICENSES.md` 与三位作者的署名。
 
 ### 干净试验台（量动作/参数只在这里量）
 
