@@ -10,7 +10,7 @@
 > [`dsh-live2d-pet/README.md`](dsh-live2d-pet/README.md)。
 
 <p align="center">
-  <a href="https://github.com/zqy857/dsh-pet-live2d/releases"><img src="https://img.shields.io/github/v/release/zqy857/dsh-pet-live2d?style=flat-square&amp;label=release" alt="Release"></a>
+  <a href="https://github.com/zqy857/whale-pet-live2d/releases"><img src="https://img.shields.io/github/v/release/zqy857/whale-pet-live2d?style=flat-square&amp;label=release" alt="Release"></a>
   <img src="https://img.shields.io/badge/Halo-%3E%3D2.21-4c6ef5?style=flat-square" alt="Halo">
   <img src="https://img.shields.io/badge/Live2D-Cubism%205-ff69b4?style=flat-square" alt="Cubism 5">
   <a href="NOTICE.md"><img src="https://img.shields.io/badge/license-MIT%20%2B%20CC%20BY--NC--SA%204.0-2ea44f?style=flat-square" alt="License"></a>
@@ -32,7 +32,7 @@
 
 ## 安装
 
-1. 从 [Releases](https://github.com/zqy857/dsh-pet-live2d/releases) 下载 `whale-pet-live2d-<版本>.jar`；
+1. 从 [Releases](https://github.com/zqy857/whale-pet-live2d/releases) 下载 `whale-pet-live2d-<版本>.jar`；
 2. Halo 控制台 → **插件** → 右上角 **安装** → 上传这个 jar → **启用**；
 3. 前台刷新页面，右下角就有她了。
 

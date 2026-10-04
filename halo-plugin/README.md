@@ -42,7 +42,7 @@ Live2D Cubism Core 是 Live2D Inc. 的专有软件，**本插件不打包、不�
 `/plugins/whale-pet-live2d/assets/**` 配长缓存。
 
 **来源与借鉴**：本插件是同一作者的
-[DSH 桌宠插件](https://github.com/zqy857/dsh-pet-live2d)（`dsh-live2d-pet/`）的移植 ——
+[DSH 桌宠插件](https://github.com/zqy857/whale-pet-live2d)（`dsh-live2d-pet/`）的移植 ——
 渲染用 pixi.js + untitled-pixi-live2d-engine，交互与「槽位 / 池子」领域模型都是本项目自己的代码。
 其中**一个技术点**借鉴了社区插件 [LIlGG/plugin-live2d](https://github.com/LIlGG/plugin-live2d)：
 把配置放进 `<script type="application/json">` 的标签体而不是 HTML 属性（我们在此基础上保留了

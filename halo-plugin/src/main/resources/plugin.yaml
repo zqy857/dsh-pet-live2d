@@ -24,9 +24,9 @@ spec:
   displayName: "鲸鱼娘桌宠（Live2D）"
   # 审核要求：logo 不能用插件模板的默认图标。它由 ReverseProxy 的 /logo/** 固定路径发出。
   logo: "/plugins/whale-pet-live2d/assets/logo/logo.png"
-  repo: "https://github.com/zqy857/dsh-pet-live2d"
-  homepage: "https://github.com/zqy857/dsh-pet-live2d"
-  issues: "https://github.com/zqy857/dsh-pet-live2d/issues"
+  repo: "https://github.com/zqy857/whale-pet-live2d"
+  homepage: "https://github.com/zqy857/whale-pet-live2d"
+  issues: "https://github.com/zqy857/whale-pet-live2d/issues"
   description: >-
     在 Halo 站点上挂一只 Live2D 桌宠（DS鲸鱼娘）：可拖动、跟随鼠标、右键面板换装，
     评论/搜索等页面事件会让她换动作与表情。桌宠客户端与渲染栈移植自
@@ -40,10 +40,10 @@ spec:
   author:
     # 上游 DSH 插件作者 + Halo 移植/维护者，两个都写清楚
     name: "A8Chann & zqy857"
-    website: "https://github.com/zqy857/dsh-pet-live2d"
+    website: "https://github.com/zqy857/whale-pet-live2d"
   license:
     # 代码 MIT；美术资源是 CC BY-NC-SA 4.0（非商业）。两者分开列，别混成一条。
     - name: "MIT"
-      url: "https://github.com/zqy857/dsh-pet-live2d/blob/main/LICENSE"
+      url: "https://github.com/zqy857/whale-pet-live2d/blob/main/LICENSE"
     - name: "CC BY-NC-SA 4.0"
       url: "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh"
