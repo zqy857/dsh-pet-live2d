@@ -47,3 +47,14 @@ live2dcubismcore.min.js
 .npm-install-test/
 .npmrc-publish
 .npm-install-test/
+
+# ---- 编辑器/工具留下的备份与补丁残渣 ----
+# 上游曾经把 AGENTS.md.bak-<时间戳> 一起提交了；这行防止再发生。
+*.bak
+*.bak-*
+*.orig
+*.rej
+
+# ---- 本地产物日志（Halo 起在 /tmp 时也会往仓库根写）----
+*.log
+
