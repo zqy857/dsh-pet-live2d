@@ -15,7 +15,7 @@
 | `src/main/resources/extensions/settings.yaml` | 控制台里的设置页（分组 `basic`） |
 | `src/main/resources/extensions/reverse-proxy.yaml` | **生成**：把 jar 内的 `pet/` 与 `logo/` 挂成 `/plugins/whale-pet-live2d/assets/v<版本>/**` 与 `/assets/logo/**` |
 | `src/main/resources/pet-base.properties` | **生成**：Java 侧读的静态资源前缀（与上面两处、与 catalog 三处互证） |
-| `src/main/resources/logo/logo.png` | **生成**：插件图标（从 `dsh-live2d-pet/docs/preview.png` 复制） |
+| `logo.png` | **手写**：插件图标源文件（512×512，透明背景头部特写）；生成器复制到 `src/main/resources/logo/logo.png` |
 | `src/main/resources/pet/` | **生成**（4 个手写文件除外）：详见 [`src/main/resources/pet/README.md`](src/main/resources/pet/README.md) |
 | `gradle.properties` | 版本号唯一来源（`plugin.yaml` 的 `spec.version` 由 devtools 按它写入） |
 
@@ -102,7 +102,7 @@ curl -X POST http://127.0.0.1:8099/system/setup \
      -d 'username=admin&password=admin12345&email=a@b.c&siteTitle=t&language=zh-CN&externalUrl=http://127.0.0.1:8099'
 
 node tools/halo-smoke.mjs --base http://127.0.0.1:8099 \
-     --jar halo-plugin/build/libs/whale-pet-live2d-0.2.0.jar --user admin --pass admin12345
+     --jar halo-plugin/build/libs/whale-pet-live2d-0.2.1.jar --user admin --pass admin12345
 ```
 
 换主题之后想重跑一遍：装主题 → 激活 → 再跑上面最后那条命令。

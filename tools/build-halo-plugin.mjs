@@ -270,9 +270,11 @@ function writeSidecar(target) {
     'base=' + ASSET_BASE,
     '',
   ].join('\n'))
-  // 图标：从宠物自己的截图复制一份（一处源头），Halo 审核要求 plugin.yaml 的 logo 不能留默认图标。
+  // 插件图标：源文件是 `halo-plugin/logo.png`（512×512，透明背景的头部特写，
+  // 由桌面端应用图标 `dsh-live2d-pet-desktop/src-tauri/icons/icon.png` 裁成正方形 + 留边距）。
+  // 这里只做复制，不做图像处理 —— 生成器不依赖 ImageMagick，换图标请替换源文件。
   mkdirSync(join(target, 'logo'), { recursive: true })
-  cpSync(join(ROOT, 'dsh-live2d-pet', 'docs', 'preview.png'), join(target, 'logo', 'logo.png'))
+  cpSync(join(ROOT, 'halo-plugin', 'logo.png'), join(target, 'logo', 'logo.png'))
 }
 
 // ------------------------------------------------------------------- 同步校验
