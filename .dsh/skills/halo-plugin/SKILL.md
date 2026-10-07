@@ -31,6 +31,13 @@ Halo 侧于是这样落地：`window.__dshLive2dPetHost = { base: "/plugins/<nam
 * ReverseProxy 的路由**只认 GET**，按扩展名给 MIME；**没有扩展名的文件照发**
   （`catalog` 能取到，Spring 会给 `application/octet-stream`）——`fetch().json()` 不看 MIME。
 * `/plugins/{name}/assets/**` 已在 Halo 的安全白名单里，匿名可访问（不用配 RBAC）。
+* **包名不要占平台的命名空间**：应用市场审核会拒 `run.halo.*` 的第三方插件包名
+  （"容易造成 Halo 平台代码与第三方插件代码的归属混淆"）。用开发者自己的反向域名，
+  例如 GitHub 账号 `zqy857` → `io.github.zqy857.<插件名>`。改包名后**必须重新构建**，
+  因为组件注册文件 `META-INF/plugin-components.idx`（Halo Gradle 插件自动生成）里写的是
+  类的全限定名 —— 它跟着编译产物走，不跟着源码目录走。
+  `tools/browser-test/test-halo-tree.mjs` 有一条断言钉住"源码包名与 Gradle group 都不是
+  `run.halo.*`"。（2026-10 首次提交市场被拒后改的。）
 * 注入页面的扩展点：`run.halo.app.theme.dialect.TemplateHeadProcessor`
   （`@since 2.0.0`，第三参是 `IElementModelStructureHandler`）；页脚是
   `TemplateFooterProcessor`（`@since 2.17.0`）。**不存在** `AbstractTemplateHeadProcessor`。

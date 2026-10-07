@@ -1,4 +1,4 @@
-package run.halo.whalepetlive2d;
+package io.github.zqy857.whalepetlive2d;
 
 import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;

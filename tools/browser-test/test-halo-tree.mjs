@@ -146,6 +146,29 @@ check('pet-halo.js 暴露 __haloPetPhase 与 phaseNow 通路',
   halodriver.includes('__haloPetPhase') && halodriver.includes('phaseNow'), '')
 check('pet-halo.js 有软导航重挂（watchdog）', halodriver.includes('watchdog'), '')
 
+// ------------------------------------------- 4.5 Java 包名不能占用 Halo 平台命名空间
+// 应用市场审核明确要求：第三方插件不能使用 `run.halo.*`（那是平台代码的命名空间，会造成归属混淆），
+// 必须用开发者/产品自己的包名。这条断言把审核意见钉在仓库里。
+{
+  const javaFiles = []
+  const walkJava = (dir) => {
+    if (!existsSync(dir)) return
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) walkJava(full)
+      else if (entry.name.endsWith('.java')) javaFiles.push(full)
+    }
+  }
+  walkJava(join(HALO, 'src', 'main', 'java'))
+  const packages = javaFiles.map((f) => (/^\s*package\s+([\w.]+)\s*;/m.exec(readFileSync(f, 'utf8'))?.[1] ?? ''))
+  check('Java 源码都在开发者自己的包名下（不是 run.halo.*）',
+    packages.length > 0 && packages.every((p) => p !== '' && !p.startsWith('run.halo.')),
+    packages.join(', '))
+  const buildGradle = existsSync(join(HALO, 'build.gradle')) ? readFileSync(join(HALO, 'build.gradle'), 'utf8') : ''
+  const group = (/^\s*group\s*=\s*['"]([^'"]+)['"]/m.exec(buildGradle)?.[1] ?? '')
+  check('Gradle group 也不是 run.halo.*', group !== '' && !group.startsWith('run.halo.'), group)
+}
+
 // ------------------------------------------------- 5. 不许混进专有运行时
 
 function walkNames(dir, base = dir, out = []) {

@@ -6,6 +6,6 @@ kind: ReverseProxy
 metadata:
   name: whale-pet-live2d-assets
 rules:
-  - path: /v0.2.2/**
+  - path: /v0.2.3/**
     file:
       directory: pet

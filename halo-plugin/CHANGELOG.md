@@ -4,6 +4,17 @@
 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)（MIT），
 Halo 插件部分由 zqy857 维护；美术资源是 CC BY-NC-SA 4.0。
 
+## 0.2.3
+
+### 改：Java 包名改为开发者自己的命名空间
+
+应用市场审核意见：`run.halo.whalepetlive2d` 占用了 Halo 平台的命名空间，容易让平台代码与
+第三方插件代码归属混淆。现在改用 `io.github.zqy857.whalepetlive2d`（基于开发者 GitHub 账号的
+反向域名），并同步更新 Gradle `group` 与自动生成的组件注册文件
+（`META-INF/plugin-components.idx`）。
+
+功能与配置没有任何变化；对外可见的只有 jar 内部的包路径。
+
 ## 0.2.2
 
 ### 修：控制台里看不到插件图标（显示成名字首字「鲸」）

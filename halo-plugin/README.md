@@ -10,7 +10,7 @@
 
 | 路径 | 说明 |
 |---|---|
-| `src/main/java/run/halo/whalepetlive2d/` | 两个类：`WhalePetLive2dPlugin`（`BasePlugin`）与 `WhalePetLive2dHeadProcessor`（注入 `<head>`） |
+| `src/main/java/io/github/zqy857/whalepetlive2d/` | 两个类：`WhalePetLive2dPlugin`（`BasePlugin`）与 `WhalePetLive2dHeadProcessor`（注入 `<head>`） |
 | `src/main/resources/plugin.yaml` | 插件清单。`metadata.name` = `whale-pet-live2d`；`settingName` 必须与 Setting 的 `metadata.name` 一字不差，否则插件启动失败 |
 | `src/main/resources/extensions/settings.yaml` | 控制台里的设置页（分组 `basic`） |
 | `src/main/resources/extensions/reverse-proxy.yaml` | **生成**：把 jar 内的 `pet/` 挂成 `/plugins/whale-pet-live2d/assets/v<版本>/**` |

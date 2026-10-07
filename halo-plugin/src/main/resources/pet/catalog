@@ -1,7 +1,7 @@
 {
   "ok": true,
   "coreUrl": "https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js",
-  "vendorUrl": "/plugins/whale-pet-live2d/assets/v0.2.2/live2d-vendor.js",
+  "vendorUrl": "/plugins/whale-pet-live2d/assets/v0.2.3/live2d-vendor.js",
   "pets": [
     {
       "id": "ds-whale-girl",
@@ -2008,7 +2008,7 @@
           ]
         }
       ],
-      "modelUrl": "/plugins/whale-pet-live2d/assets/v0.2.2/pets/ds-whale-girl/c_0120.model3.json"
+      "modelUrl": "/plugins/whale-pet-live2d/assets/v0.2.3/pets/ds-whale-girl/c_0120.model3.json"
     }
   ]
 }

@@ -1,4 +1,4 @@
-package run.halo.whalepetlive2d;
+package io.github.zqy857.whalepetlive2d;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

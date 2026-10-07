@@ -8,7 +8,7 @@ plugins {
     id 'run.halo.plugin.devtools' version '0.8.0'
 }
 
-group = 'run.halo.whalepetlive2d'
+group = 'io.github.zqy857.whalepetlive2d'
 
 repositories {
     // 只用 Maven Central：repo.halo.run 在当前网络不可达（TLS 失败）。
